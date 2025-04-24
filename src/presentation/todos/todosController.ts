@@ -1,81 +1,85 @@
-import { error } from 'console';
-import {Request, Response} from 'express';
+import { Request, Response } from 'express';
+import { prisma } from '../../data/postgres';
+import { CreateTodoDto } from '../../domain/dtos/todos/create-todo.dto';
+import { UpdateTodoDto } from '../../domain/dtos/todos/update-todo.dto';
 
 /**En este controler definimos la logica de las rutas.
- * 
+ *
  * Basicamente esto es solo una funcion que se va a mandar llamar.
  */
-const todos = [
-    {'id': 1, 'text': 'Buy Milk', 'completedAt': new Date()},
-    {'id': 2, 'text': 'Buy Butter', 'completedAt': null},
-    {'id': 3, 'text': 'Buy Honet', 'completedAt': new Date()}
-]
-
 
 export class TodosController {
+  constructor() {}
 
-    constructor(){}
+  public getTodos = async (req: Request, res: Response) => {
+    const todos = await prisma.todo.findMany();
+    res.json(todos);
+  };
 
-    public getTodos = (req: Request, res: Response) => {
-        res.json(todos);
+  public getTodoById = async (req: Request, res: Response) => {
+    const id = +req.params.id;
+
+    if (isNaN(id)) {
+      res.status(400).json({ error: `The param ${id} is not valid` });
+      return;
     }
 
-    public getTodoById = (req: Request, res: Response) => {
-        const id = +req.params.id;
+    const todo = await prisma.todo.findUnique({
+      where: {
+        id: id,
+      },
+    });
 
-        if(isNaN(id)){
-            res.status(400).json({'error': `The param ${id} is not valid`});
-            return;
-        }
+    todo
+      ? res.json(todo)
+      : res.status(404).json({ error: `todo ${id} not found` });
+  };
 
+  public createTodo = async (req: Request, res: Response) => {
+    const [error, createTodoDto] = CreateTodoDto.create(req.body);
+    if(error) res.status(400).json({error});
 
-        const todo = todos.find(todo => todo.id === id);
+    const todo = await prisma.todo.create({
+      data: createTodoDto!,
+    });
+    res.json(todo);
+  };
 
-        (todo)
-        ? res.json(todo) 
-        : res.status(404).json({'error': `todo ${id} not found`});
-    }
+  public updateTodo = async (req: Request, res: Response) => {
+    const id = +req.params.id;
+    const [error, updateTodoDto] = UpdateTodoDto.create({...req.body, id});
 
-    public createTodo = (req: Request, res: Response) => {
-        const {text} = req.body;
-        if (!text){
-            res.status(400).json({error: 'Text property is required'});
-        }
+    if(error) res.status(400).json({error}); 
+    
 
-        const newTodo = {
-            id: todos.length + 1,
-            text: text,
-            completedAt: null
-        };
+    const todo = await prisma.todo.findUnique({ where: { id: id } });
+    if (!todo) res.status(404).json({ error: `todo ${id} not found` });
 
-        todos.push(newTodo);
-        res.json(newTodo);
+    
 
-    }
+    const todoUpdate = await prisma.todo.update({
+      where: {
+        id: id,
+      },
+      data: updateTodoDto!.values
+    });
 
-    public updateTodo = (req: Request, res: Response) => {
-        const id = +req.params.id;
-        if(isNaN(id)) res.status(400).json({error: 'Id argument is not a number'});
+    res.json(todoUpdate);
+  };
 
-        const todo = todos.find(todo => todo.id === id);
-        if(!todo) res.status(404).json({error: 'todo not found'});
+  public deleteTodo = async (req: Request, res: Response) => {
+    const id = +req.params.id;
 
-        const {text, completedAt} = req.body;
+    const todo = await prisma.todo.findUnique({
+      where: {
+        id: id,
+      },
+    });
 
-        todo!.text = text || todo!.text;
-        (completedAt === 'null') ? todo!.completedAt = null : todo!.completedAt = new Date(completedAt || todo?.completedAt);
+    todo
+      ? await prisma.todo.delete({ where: { id: id } })
+      : res.status(404).json({ error: `todo ${id} not found` });
 
-        res.json(todo);
-    }
-
-    public deleteTodo = (req: Request, res: Response) => {
-        const id = +req.params.id;
-
-        const todo = todos.find(todo => todo.id === id);
-        if(!todo) res.status(404).json({error: 'Todo not found'});
-
-        todos.splice(todos.indexOf(todo!), 1);
-        res.json(todo);
-    }
+    res.json(todo);
+  };
 }
-

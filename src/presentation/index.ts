@@ -1,2 +1,2 @@
 export { Server } from './server';
-export { AppRoutes } from "./appRoutes";
+export { AppRoutes } from './appRoutes';
