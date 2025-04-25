@@ -154,11 +154,12 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
         "fromEnvVar": "POSTGRES_URL",
-        "value": "postgresql://postgres:123456@localhost:5432/TODO"
+        "value": null
       }
     }
   },
