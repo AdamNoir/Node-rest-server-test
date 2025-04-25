@@ -1,13 +1,15 @@
-import { env } from "process";
-import { envs } from "./config";
-import { Server } from "./presentation";
-
+import { envs } from './config';
+import { Server, AppRoutes } from './presentation';
 
 (() => {
-    main();
-}) ();
+  main();
+})();
 
-async function main(){
-    const server = new Server({port: envs.PORT, public_path: envs.PUBLIC_PATH});
-    server.start();
+async function main() {
+  const server = new Server({
+    port: envs.PORT,
+    public_path: envs.PUBLIC_PATH,
+    routes: AppRoutes.routes,
+  });
+  server.start();
 }
