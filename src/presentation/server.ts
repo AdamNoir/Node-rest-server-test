@@ -39,5 +39,6 @@ export class Server {
     this.app.listen(this.port, () => {
       console.log(`Server is running with express in port ${this.port}`);
     });
+  
   }
 }

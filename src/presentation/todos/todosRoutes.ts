@@ -1,5 +1,8 @@
 import { Router } from 'express';
 import { TodosController } from './todosController';
+import { TodoDatasourceImpl } from '../../infrastructure/datasources/todo.datasource.impl';
+import { TodoRepository } from '../../domain/repositories/todo.repository';
+import { TodoRepositoryImpl } from '../../infrastructure/repositories/todo.repository.impl';
 
 /**
  *
@@ -11,7 +14,9 @@ import { TodosController } from './todosController';
 export class TodoRoutes {
   static get routes(): Router {
     const router = Router();
-    const todoController = new TodosController();
+    const todoDatasource = new TodoDatasourceImpl();
+    const todoRepository = new TodoRepositoryImpl(todoDatasource);
+    const todoController = new TodosController(todoRepository);
 
     router.get('/', todoController.getTodos);
     router.get('/:id', todoController.getTodoById);
